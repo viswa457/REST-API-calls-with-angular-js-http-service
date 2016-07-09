@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>REST API calls with Angular $http in-built service</title>
+    <link href="http://getbootstrap.com/dist/css/bootstrap.css" rel="stylesheet" type="text/css" />
+    <style>
+        [ng\:cloak],
+        [ng-cloak],
+        [data-ng-cloak],
+        [x-ng-cloak],
+        .ng-cloak,
+        .x-ng-cloak {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body ng-app="restApp" ng-cloak>
+    <div class="container" ng-controller="BooksCtrl">
+        <h1 class="text-center">All Books</h1>
+        <table class="table table-bordered" ng-if="books.length">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Isbn No.</th>
+                    <th>Created On</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="book in books">
+                    <td>{{ book.id }}</td>
+                    <td>{{ book.name }}</td>
+                    <td>{{ book.isbn }}</td>
+                    <td>{{ book.createdOn | date }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="alert alert-danger" ng-if="!books.length">
+            <p>No books found!</p>
+        </div>
+    </div>
+
+
+    <script src="https://code.angularjs.org/1.2.16/angular.min.js"></script>
+    <script>
+        angular.module("restApp", []);
+
+         // Define the service
+        angular.module("restApp").factory("BookService", function($http) {
+            var factory = {},
+                baseUrl = "http://hkapi.herokuapp.com/books/";
+
+            // GET /books
+            factory.getAllBooks = function() {
+                return $http.get(baseUrl);
+            };
+
+            // POST /books
+            // formData - { name: "JAVA", "isbn": "123asbasddasnSGSF"}
+            factory.creatNewBook = function(formData) {
+                return $http.post(baseUrl, formData);
+            };
+
+            // GET /books/729e31b4736718b8  
+            factory.getSingleBook = function(id) {
+                return $http.get(baseUrl + id);
+            };
+
+            // PUT /books/:id (Note- you can pass id with data as below - PUT /books)
+            // id - "7d0c643b97afb893", formData - { name: "JAVA 6", "isbn": "1111"}
+            factory.updateSingleBook = function(id, formData) {
+                return $http.put(baseUrl + id, formData);
+            };
+
+            // DELETE /books/42a7dafbce11db69
+            factory.deleteSingleBook = function(id) {
+                return $http.delete(baseUrl + id);
+            };
+
+            return factory;
+        });
+
+         // Using the service
+        angular.module("restApp").controller("BooksCtrl", function($scope, BookService) {
+
+            // 1 : Fetch all Books    
+            BookService.getAllBooks().success(function(data) {
+                console.log("Got all books", data);
+                $scope.books = data;
+            });
+
+            // 2:  Fetch single book
+            BookService.getSingleBook("883cb7060c6e98bc").success(function(data) {
+                console.log("got single Record", data);
+            });
+
+            // 3: Create a new book
+            BookService.creatNewBook({
+                name: "jQuery 2.1.1",
+                isbn: "asdas326523424324"
+            }).success(function(data) {
+                $scope.books.push(data);
+                console.log("New book created ", data);
+            });
+
+            // 4: Update a book
+            BookService.updateSingleBook("7d0c643b97afb893", {
+                name: "JAVA 6",
+                isbn: "1111"
+            }).success(function(data) {
+                console.log("update success ", data);
+            });    
+            
+            // 5: Delete a book
+            BookService.deleteSingleBook("42a7dafbce11db69").success(function(data) {
+                console.log("Book Removed");
+            });
+        });
+    </script>
+</body>
+</html>
